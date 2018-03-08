@@ -1,7 +1,26 @@
-import socket
 import json
+import socketserver
 
 from blockchain.chain import Chain
+
+
+class _RequestHandler(socketserver.BaseRequestHandler):
+
+    def handle(self):
+        message_str = self.request.recv(1024).strip().decode('utf-8')
+        message_obj = json.loads(message_str)
+        message_type = message_obj['type']
+        response = 'OK'
+        peer = self.server.peer
+        if message_type == 'MINE':
+            peer.mine(message_obj['data'])
+        elif message_type == 'CONNECT':
+            host = message_obj['host']
+            port = message_obj['port']
+            peer.connect_to_peer(host, port)
+        elif message_type == 'CHAIN':
+            response = json.dumps(peer.chain.to_dict())
+        self.request.sendall(response.encode('utf-8'))
 
 
 class Peer(object):
@@ -13,21 +32,13 @@ class Peer(object):
         self.chain = Chain()
 
     def start(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind((self.host, self.port))
-        s.listen(5)
-        try:
-            print(f'Peer running at {self.host}:{self.port}')
-            while True:
-                conn, _ = s.accept()
-                message = conn.recv(1024)
-                print(message)
-                self._handle_message(message)
-        except KeyboardInterrupt as _:
-            pass
-        finally:
-            s.close()
-            print(f'Peer closed at {self.host}:{self.port}')
+        handler = _RequestHandler
+        handler.chain = self.chain
+        server = socketserver.ThreadingTCPServer(
+            (self.host, self.port), _RequestHandler)
+        server.peer = self
+        server.serve_forever()
+        print(f'Peer running at {self.host}:{self.port}')
 
     def connect_to_peer(self, host, port):
         if (host, port) in self.peers:
@@ -39,17 +50,5 @@ class Peer(object):
             return
         self.peers.remove((host, port))
 
-    def mine(self):
-        pass
-
-    # TODO: should be private method
-    def boardcast(self, message):
-        for (host, port) in self.peers:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((host, port))
-            s.sendall(message)
-            s.close()
-
-    def _handle_message(self, message):
-        print(message)
-        return ''
+    def mine(self, data):
+        return self.chain.mine(data)

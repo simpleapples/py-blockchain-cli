@@ -17,3 +17,13 @@ class Block(object):
             str(self.index), self.previous_hash, str(self.timestamp), self.data,
             str(self.nonce)])
         return sha256(original_str.encode('utf-8')).hexdigest()
+
+    def to_dict(self):
+        return {
+            'index': str(self.index),
+            'previous_hash': self.previous_hash,
+            'timestamp': self.timestamp,
+            'data': self.data,
+            'nonce': self.nonce,
+            'hash': self.hash
+        }
