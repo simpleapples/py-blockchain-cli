@@ -46,8 +46,12 @@ class Peer(object):
         server = socketserver.ThreadingTCPServer(
             (self.host, self.port), _RequestHandler)
         server.peer = self
-        server.serve_forever()
-        print(f'Peer running at {self.host}:{self.port}')
+        try:
+            server.serve_forever()
+            print(f'Peer running at {self.host}:{self.port}')
+        except KeyboardInterrupt as _:
+            server.server_close()
+            print(f'Peer closed at {self.host}:{self.port}')
 
     def connect_to_peer(self, host, port):
         if (host, port) in self._peers:
