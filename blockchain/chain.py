@@ -4,7 +4,7 @@ from blockchain.block import Block
 class Chain(object):
 
     def __init__(self):
-        genesis = Block(data='Welcome to blockchain cli!')
+        genesis = Block.genesis()
         self._chain_list = [genesis]
         self._difficulty = 4
 
@@ -17,6 +17,16 @@ class Chain(object):
             if self._is_hash_valid(new.hash):
                 self._chain_list.append(new)
                 break
+
+    def replace_chain(self, chain):
+        if len(chain) > len(self._chain_list):
+            chain_list = []
+            for block in chain:
+                chain_list.append(Block(
+                    int(block['index']), int(block['nonce']),
+                    block['previous_hash'], block['data'], block['hash'],
+                    float(block['timestamp'])))
+            self._chain_list = chain_list
 
     def to_dict(self):
         return [item.to_dict() for item in self._chain_list]
