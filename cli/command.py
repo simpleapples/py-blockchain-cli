@@ -15,12 +15,21 @@ class Command(object):
         peer = Peer(host, port)
         peer.start()
 
+    def connect_peer(self, host, port, target_host, target_port):
+        message = {'type': 'CONNECT', 'host': target_host, 'port': target_port}
+        return self._dispatch_message_task(host, port, message)
+
+    def disconnect_peer(self, host, port, target_host, target_port):
+        message = {
+            'type': 'DISCONNECT', 'host': target_host, 'port': target_port}
+        return self._dispatch_message_task(host, port, message)
+
     def mine(self, host, port, data):
         message = {'type': 'MINE', 'data': data}
         return self._dispatch_message_task(host, port, message)
 
     def get_chain(self, host, port):
-        message = {'type': 'CHAIN'}
+        message = {'type': 'GET_CHAIN'}
         return self._dispatch_message_task(host, port, message)
 
     def _dispatch_message_task(self, host, port, message):
