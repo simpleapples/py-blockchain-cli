@@ -6,7 +6,7 @@ import multiprocessing
 from blockchain.chain import Chain
 
 
-class _RequestHandler(socketserver.BaseRequestHandler):
+class _PeerRequestHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
         message_str = self.request.recv(1024).strip().decode('utf-8')
@@ -20,13 +20,11 @@ class _RequestHandler(socketserver.BaseRequestHandler):
             host = message_obj['host']
             port = message_obj['port']
             peer.connect_to_peer(host, port)
-        elif message_type == 'DISCONNECT':
-            host = message_obj['host']
-            port = message_obj['port']
-            peer.disconnect_from_peer(host, port)
-        elif message_type == 'GET_CHAIN':
+        elif message_type == 'PEERS':
+            response = json.dumps(peer.peers)
+        elif message_type == 'SHOW':
             response = json.dumps(peer.chain.to_dict())
-        elif message_type == 'BROADCAST_CHAIN':
+        elif message_type == 'CHAIN':
             chain = message_obj['chain']
             peer.replace_chain(chain)
         self.request.sendall(response.encode('utf-8'))
@@ -41,31 +39,25 @@ class Peer(object):
         self._chain = Chain()
 
     def start(self):
-        handler = _RequestHandler
-        handler.chain = self._chain
         server = socketserver.ThreadingTCPServer(
-            (self.host, self.port), _RequestHandler)
+            (self.host, self.port), _PeerRequestHandler)
         server.peer = self
         try:
             server.serve_forever()
-            print(f'Peer running at {self.host}:{self.port}')
         except KeyboardInterrupt as _:
             server.server_close()
-            print(f'Peer closed at {self.host}:{self.port}')
 
     def connect_to_peer(self, host, port):
         if (host, port) in self._peers:
             return
         self._peers.add((host, port))
-        self._send_connect_message(host, port)
-
-    def disconnect_from_peer(self, host, port):
-        if (host, port) not in self._peers:
-            return
-        self._peers.remove((host, port))
+        self._request_connection(host, port)
+        peers = self._request_peers(host, port)
+        self._add_peers(json.loads(peers))
+        self._broadcast_chain()
 
     def mine(self, data):
-        self.chain.mine(data)
+        self._chain.mine(data)
         self._broadcast_chain()
 
     def replace_chain(self, chain):
@@ -75,19 +67,35 @@ class Peer(object):
     def chain(self):
         return self._chain
 
-    def _broadcast_chain(self):
-        pool = multiprocessing.Pool(5)
-        results = []
-        message = {'type': 'BROADCAST_CHAIN', 'chain': self._chain.to_dict()}
-        for (host, port) in self._peers:
-            results.append(pool.apply_async(
-                self._send_message, args=(host, port, message)))
-        pool.close()
-        pool.join()
+    @property
+    def peers(self):
+        return [{'host': host, 'port': port} for (host, port) in self._peers]
 
-    def _send_connect_message(self, host, port):
+    def _add_peers(self, peers):
+        for peer in peers:
+            host = peer['host']
+            port = peer['port']
+            if host == self.host and port == self.port:
+                continue
+            if (host, port) in self._peers:
+                continue
+            self._peers.add((host, port))
+
+    # Communication
+
+    def _request_connection(self, host, port):
         message = {'type': 'CONNECT', 'host': self.host, 'port': self.port}
-        self._unicast(host, port, message)
+        return self._unicast(host, port, message)
+
+    def _request_peers(self, host, port):
+        message = {'type': 'PEERS', 'host': self.host, 'port': self.port}
+        return self._unicast(host, port, message)
+
+    def _broadcast_chain(self):
+        message = {'type': 'CHAIN', 'chain': self._chain.to_dict()}
+        return self._broadcast(message)
+
+    # Base communication
 
     def _unicast(self, host, port, message):
         pool = multiprocessing.Pool(1)
@@ -98,11 +106,14 @@ class Peer(object):
         return result.get()
 
     def _broadcast(self, message):
+        results = []
         pool = multiprocessing.Pool(5)
         for (host, port) in self._peers:
-            pool.apply_async(self._send_message, args=(host, port, message))
+            results.append(pool.apply_async(
+                self._send_message, args=(host, port, message)))
         pool.close()
         pool.join()
+        return [result.get() for result in results]
 
     def _send_message(self, host, port, message):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -110,6 +121,4 @@ class Peer(object):
         s.send(json.dumps(message).encode('utf-8'))
         response = s.recv(1024, 0)
         s.close()
-        print('Type:', message['type'], 'Response:',
-              response.decode('utf-8'))
         return response.decode('utf-8')

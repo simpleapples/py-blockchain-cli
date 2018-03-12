@@ -10,6 +10,7 @@ class Command(object):
     def start_peer(self, host, port):
         p = multiprocessing.Process(target=self._start_peer, args=(host, port))
         p.start()
+        print(f'Peer running at {host}:{port}')
 
     def _start_peer(self, host, port):
         peer = Peer(host, port)
@@ -17,22 +18,33 @@ class Command(object):
 
     def connect_peer(self, host, port, target_host, target_port):
         message = {'type': 'CONNECT', 'host': target_host, 'port': target_port}
-        return self._dispatch_message_task(host, port, message)
-
-    def disconnect_peer(self, host, port, target_host, target_port):
-        message = {
-            'type': 'DISCONNECT', 'host': target_host, 'port': target_port}
-        return self._dispatch_message_task(host, port, message)
+        result = self._unicast(host, port, message)
+        if result == 'OK':
+            print(f'Peer {host}:{port} connected to {target_host}:{target_port}')
+        else:
+            print('Connect failed')
+        return result
 
     def mine(self, host, port, data):
+        print('Mining...')
         message = {'type': 'MINE', 'data': data}
-        return self._dispatch_message_task(host, port, message)
+        result = self._unicast(host, port, message)
+        if result == 'OK':
+            print('A new block was mined')
+        else:
+            print('Mine failed')
+        return result
 
     def get_chain(self, host, port):
-        message = {'type': 'GET_CHAIN'}
-        return self._dispatch_message_task(host, port, message)
+        message = {'type': 'SHOW'}
+        result = self._unicast(host, port, message)
+        if result:
+            print(result)
+        else:
+            print('Empty blockchain')
+        return result
 
-    def _dispatch_message_task(self, host, port, message):
+    def _unicast(self, host, port, message):
         pool = multiprocessing.Pool(1)
         result = pool.apply_async(
             self._send_message, args=(host, port, message))
@@ -46,5 +58,4 @@ class Command(object):
         s.send(json.dumps(message).encode('utf-8'))
         response = s.recv(1024, 0)
         s.close()
-        print('Type:', message['type'], 'Response:', response.decode('utf-8'))
         return response.decode('utf-8')
