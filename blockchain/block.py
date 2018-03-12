@@ -5,12 +5,12 @@ from hashlib import sha256
 class Block(object):
 
     def __init__(
-            self, index=0, nonce=0, previous_hash='0', data='', hash='',
+            self, index=0, nonce=0, previous_hash=None, data=None, hash=None,
             timestamp=None):
         self.index = index
-        self.previous_hash = previous_hash
+        self.previous_hash = previous_hash or '0'
         self.timestamp = timestamp or time.time()
-        self.data = data
+        self.data = data or ''
         self.nonce = nonce
         self.hash = hash or self._calculate_hash()
 

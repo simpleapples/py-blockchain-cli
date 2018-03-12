@@ -100,8 +100,7 @@ class Peer(object):
     def _broadcast(self, message):
         pool = multiprocessing.Pool(5)
         for (host, port) in self._peers:
-            result = pool.apply_async(
-                self._send_message, args=(host, port, message))
+            pool.apply_async(self._send_message, args=(host, port, message))
         pool.close()
         pool.join()
 
