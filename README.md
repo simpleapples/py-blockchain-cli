@@ -4,9 +4,7 @@ A simple blockchain command-line tool
 
 # Screenshot
 
-<p align="center">
-![](http://ww1.sinaimg.cn/large/6ae0adaely1fpag7hl13dg20mf0l0wla.gif)
-</p>
+![](http://ww1.sinaimg.cn/large/6ae0adaely1fpagg3ur58g20i30aun5a.gif)
 
 # Features
 
