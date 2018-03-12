@@ -8,9 +8,9 @@ A simple blockchain command-line tool
 
 # Features
 
-- Mining Block with data
+- Mining block with data
 - Distributed peer-to-peer Network
-- Proof-of-work System
+- Proof-of-work system
 - Blockchain validation
 
 # Run
