@@ -9,7 +9,7 @@ from blockchain.chain import Chain
 class _PeerRequestHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
-        message_str = self.request.recv(1024).strip().decode('utf-8')
+        message_str = self.request.recv(655350).strip().decode('utf-8')
         message_obj = json.loads(message_str)
         message_type = message_obj['type']
         response = 'OK'
@@ -51,9 +51,9 @@ class Peer(object):
         if (host, port) in self._peers:
             return
         self._peers.add((host, port))
-        self._request_connection(host, port)
         peers = self._request_peers(host, port)
         self._add_peers(json.loads(peers))
+        self._request_connection()
         self._broadcast_chain()
 
     def mine(self, data):
@@ -83,9 +83,9 @@ class Peer(object):
 
     # Communication
 
-    def _request_connection(self, host, port):
+    def _request_connection(self):
         message = {'type': 'CONNECT', 'host': self.host, 'port': self.port}
-        return self._unicast(host, port, message)
+        return self._broadcast(message)
 
     def _request_peers(self, host, port):
         message = {'type': 'PEERS', 'host': self.host, 'port': self.port}
@@ -116,9 +116,8 @@ class Peer(object):
         return [result.get() for result in results]
 
     def _send_message(self, host, port, message):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((host, port))
-        s.send(json.dumps(message).encode('utf-8'))
-        response = s.recv(1024, 0)
-        s.close()
-        return response.decode('utf-8')
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((host, port))
+            s.sendall(json.dumps(message).encode('utf-8'))
+            response = s.recv(655350, 0)
+            return response.decode('utf-8')

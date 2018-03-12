@@ -40,9 +40,15 @@ class Interface(cmd.Cmd):
         '''
         self._command.get_chain(self._default_host, int(port))
 
-    def do_help(self, arg):
+    def do_exit(self, _):
+        exit(0)
+
+    def do_help(self, _):
         print('\n')
         print('Commands:')
+        print('\n')
+        print('help \t\t\t\t Help for given commands')
+        print('exit \t\t\t\t Exit application')
         print('\n')
         print('open <port> \t\t\t Open peer listening port Eg: open 5000')
         print(

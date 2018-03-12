@@ -17,6 +17,7 @@ class Command(object):
         peer.start()
 
     def connect_peer(self, host, port, target_host, target_port):
+        print('Connecting...')
         message = {'type': 'CONNECT', 'host': target_host, 'port': target_port}
         result = self._unicast(host, port, message)
         if result == 'OK':
@@ -53,9 +54,8 @@ class Command(object):
         return result.get()
 
     def _send_message(self, host, port, message):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((host, port))
-        s.send(json.dumps(message).encode('utf-8'))
-        response = s.recv(1024, 0)
-        s.close()
-        return response.decode('utf-8')
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((host, port))
+            s.sendall(json.dumps(message).encode('utf-8'))
+            response = s.recv(655350)
+            return response.decode('utf-8')
