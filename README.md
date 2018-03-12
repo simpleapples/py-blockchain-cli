@@ -1,6 +1,6 @@
 # PyBlockchainCLI
 
-A simple blockchain command-line tool
+A simple blockchain command-line tool without using any 3rd party library.
 
 # Screenshot
 
@@ -26,6 +26,10 @@ cd py-blockchain-cli
 python3 main.py
 ```
 
+# Contributing
+
+Please submit a pull request to contribute.
+
 # License
 
-This project is licensed under the MIT License
+This project is licensed under the MIT License.
