@@ -40,7 +40,27 @@ class Command(object):
         message = {'type': 'SHOW'}
         result = self._unicast(host, port, message)
         if result:
-            print(result)
+            chain = json.loads(result)
+            for block in chain:
+                index = block['index']
+                prev_hash = block['previous_hash']
+                timestamp = block['timestamp']
+                data = block['data']
+                nonce = block['nonce']
+                hash = block['hash']
+                print('\n')
+                print(f'# Block {index}')
+                print('+-----------+--------------------+')
+                print(f'| prev_hash |{prev_hash[:20]: >{20}}|')
+                print('|-----------|--------------------|')
+                print(f'| timestamp |{timestamp: >{20}}|')
+                print('|-----------|--------------------|')
+                print(f'|    data   |{data[:20]: >{20}}|')
+                print('|-----------|--------------------|')
+                print(f'|   nonce   |{nonce: >{20}}|')
+                print('|-----------|--------------------|')
+                print(f'|    hash   |{hash[:20]: >{20}}|')
+                print('+-----------+--------------------+')
         else:
             print('Empty blockchain')
         return result
