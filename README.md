@@ -1,6 +1,6 @@
 # PyBlockchainCLI [![Build Status](https://travis-ci.org/simpleapples/py-blockchain-cli.svg?branch=master)](https://travis-ci.org/simpleapples/py-blockchain-cli)
 
-A simple blockchain command-line tool without using any 3rd party library.
+A simple blockchain command-line interface without using any 3rd party library.
 
 # Screenshot
 
