@@ -16,7 +16,7 @@ class Block(object):
 
     def to_dict(self):
         return {
-            'index': str(self.index),
+            'index': self.index,
             'previous_hash': self.previous_hash,
             'timestamp': self.timestamp,
             'data': self.data,
@@ -36,3 +36,13 @@ class Block(object):
             str(self.index), self.previous_hash, str(self.timestamp), self.data,
             str(self.nonce)])
         return sha256(original_str.encode('utf-8')).hexdigest()
+
+    def __eq__(self, other):
+        if (self.index == other.index
+                and self.previous_hash == other.previous_hash
+                and self.timestamp == other.timestamp
+                and self.data == other.data
+                and self.nonce == other.nonce
+                and self.hash == other.hash):
+            return True
+        return False
