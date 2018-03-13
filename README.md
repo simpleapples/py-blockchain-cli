@@ -13,6 +13,10 @@ A simple blockchain command-line tool without using any 3rd party library.
 - Proof-of-work system
 - Blockchain validation
 
+# Installation
+
+Only support python 3.6+
+
 # Run
 
 ```bash
