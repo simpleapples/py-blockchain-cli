@@ -2,7 +2,7 @@
 
 [中文文档](README_zh.md)
 
-A simple blockchain command-line tool without using any 3rd party library.
+A simple blockchain command-line interface without using any 3rd party library.
 
 # Screenshot
 
@@ -14,6 +14,10 @@ A simple blockchain command-line tool without using any 3rd party library.
 - Distributed peer-to-peer Network
 - Proof-of-work system
 - Blockchain validation
+
+# Installation
+
+Only support python 3.6+
 
 # Run
 
